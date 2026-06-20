@@ -1,0 +1,154 @@
+import tkinter as tk
+from tkinter import messagebox
+
+class NextGenOSBuilder:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("OS Architect Engine Pro")
+        self.root.geometry("1000x600")
+        self.root.configure(bg="#1e1e24")
+
+        # Configuration States
+        self.os_title = tk.StringVar(value="My OS Pro")
+        self.theme_color = "#2b2d42"
+        self.accent_color = "#ef233c"
+        self.has_taskbar = tk.BooleanVar(value=True)
+        self.has_star_asset = tk.BooleanVar(value=True)
+
+        self.setup_layout()
+
+    def setup_layout(self):
+        # LEFT CONTROL PANEL (The Builder)
+        self.control_panel = tk.Frame(self.root, width=350, bg="#2b2d42", padx=20, pady=20)
+        self.control_panel.pack(side="left", fill="y")
+        self.control_panel.pack_propagate(False)
+
+        # RIGHT WORKSPACE (The Live Canvas View)
+        self.workspace = tk.Frame(self.root, bg="#1e1e24", padx=20, pady=20)
+        self.workspace.pack(side="right", fill="both", expand=True)
+
+        self.build_control_widgets()
+        self.build_preview_canvas()
+        self.update_live_preview()
+
+    def build_control_widgets(self):
+        """Builds a completely unique set of controls."""
+        tk.Label(self.control_panel, text="OS ENGINE CONTROLS", font=("Impact", 18), fg="#edf2f4", bg="#2b2d42").pack(anchor="w", pady=(0, 20))
+
+        # Input: OS Name
+        tk.Label(self.control_panel, text="Operating System Name:", font=("Arial", 10, "bold"), fg="#8d99ae", bg="#2b2d42").pack(anchor="w")
+        name_entry = tk.Entry(self.control_panel, textvariable=self.os_title, font=("Arial", 11), bg="#edf2f4", fg="#2b2d42", bd=0, insertbackground="#2b2d42")
+        name_entry.pack(fill="x", pady=(5, 15))
+        self.os_title.trace_add("write", lambda *args: self.update_live_preview())
+
+        # Selectable Theme Pre-sets
+        tk.Label(self.control_panel, text="Desktop Environment Theme:", font=("Arial", 10, "bold"), fg="#8d99ae", bg="#2b2d42").pack(anchor="w")
+        themes = [
+            ("Cyberpunk Neon", "#0f0c1b", "#00f0ff"),
+            ("Deep Slate", "#2b2d42", "#ef233c"),
+            ("Forest Minimalist", "#1a2e1a", "#76c893")
+        ]
+        for name, bg_c, acc_c in themes:
+            btn = tk.Button(self.control_panel, text=name, font=("Arial", 9, "bold"), bg=bg_c, fg="#edf2f4", 
+                            activebackground=acc_c, command=lambda b=bg_c, a=acc_c: self.change_theme(b, a))
+            btn.pack(fill="x", pady=3)
+
+        # Toggle Elements
+        tk.Label(self.control_panel, text="System Architecture Assets:", font=("Arial", 10, "bold"), fg="#8d99ae", bg="#2b2d42").pack(anchor="w", pady=(15, 5))
+        
+        tk.Checkbutton(self.control_panel, text="Render Modern Taskbar Layout", variable=self.has_taskbar, command=self.update_live_preview,
+                       bg="#2b2d42", fg="#edf2f4", selectcolor="#1e1e24", activebackground="#2b2d42", activeforeground="#edf2f4").pack(anchor="w", pady=2)
+        
+        tk.Checkbutton(self.control_panel, text="Inject Custom Action Badges (+/-)", variable=self.has_star_asset, command=self.update_live_preview,
+                       bg="#2b2d42", fg="#edf2f4", selectcolor="#1e1e24", activebackground="#2b2d42", activeforeground="#edf2f4").pack(anchor="w", pady=2)
+
+        # Compile Button
+        compile_btn = tk.Button(self.control_panel, text="⚡ COMPILE TO LIVE WINDOW", font=("Arial", 11, "bold"), bg="#ef233c", fg="white", bd=0, padding=10, command=self.launch_compiled_window)
+        compile_btn.pack(side="bottom", fill="x")
+
+    def build_preview_canvas(self):
+        """Constructs a real visual canvas to act as the live monitor mock screen."""
+        tk.Label(self.workspace, text="LIVE PREVIEW MONITOR", font=("Arial", 12, "bold"), fg="#8d99ae", bg="#1e1e24").pack(anchor="w", pady=(0, 5))
+        
+        # Simulated Monitor Frame
+        self.canvas = tk.Canvas(self.workspace, bg=self.theme_color, highlightthickness=4, highlightbackground="#8d99ae")
+        self.canvas.pack(fill="both", expand=True)
+
+    def change_theme(self, bg_c, acc_c):
+        self.theme_color = bg_c
+        self.accent_color = acc_c
+        self.update_live_preview()
+
+    def update_live_preview(self):
+        """Wipes the monitor canvas and completely renders the layout based on current builder state."""
+        self.canvas.delete("all")
+        self.canvas.configure(bg=self.theme_color)
+
+        # Get dynamic sizes
+        width = self.canvas.winfo_width() if self.canvas.winfo_width() > 1 else 600
+        height = self.canvas.winfo_height() if self.canvas.winfo_height() > 1 else 500
+
+        # Draw Title
+        self.canvas.create_text(width // 2, 80, text=self.os_title.get(), fill="#edf2f4", font=("Arial", 28, "bold"), justify="center")
+        self.canvas.create_text(width // 2, 120, text="Engine Simulator Active", fill=self.accent_color, font=("Courier", 10, "italic"))
+
+        # Draw Taskbar asset if toggled
+        if self.has_taskbar.get():
+            self.canvas.create_rectangle(0, height - 50, width, height, fill="#1c1d22", outline="")
+            # Start button on taskbar
+            self.canvas.create_rectangle(15, height - 42, 80, height - 8, fill=self.accent_color, outline="")
+            self.canvas.create_text(47, height - 25, text="START", fill="white", font=("Arial", 9, "bold"))
+            # App pills on taskbar
+            self.canvas.create_rectangle(95, height - 40, 145, height - 10, fill="#4a4e69", outline="")
+            self.canvas.create_rectangle(155, height - 40, 205, height - 10, fill="#4a4e69", outline="")
+
+        # Draw Star Action Badge Graphics if toggled
+        if self.has_star_asset.get():
+            # Star Asset 1 (With Plus Indicator)
+            self.draw_mock_star(60, 180, self.accent_color)
+            self.canvas.create_circle = lambda x, y, r, **kwargs: self.canvas.create_oval(x-r, y-r, x+r, y+r, **kwargs)
+            self.canvas.create_circle(100, 220, 10, fill="white", outline="")
+            self.canvas.create_text(100, 220, text="+", fill="green", font=("Arial", 12, "bold"))
+            self.canvas.create_text(60, 250, text="Add_Asset.sys", fill="#edf2f4", font=("Arial", 8))
+
+            # Star Asset 2 (With Minus Indicator)
+            self.draw_mock_star(180, 180, "#8d99ae")
+            self.canvas.create_circle(220, 220, 10, fill="white", outline="")
+            self.canvas.create_text(220, 220, text="-", fill="red", font=("Arial", 14, "bold"))
+            self.canvas.create_text(180, 250, text="Del_Asset.sys", fill="#edf2f4", font=("Arial", 8))
+
+    def draw_mock_star(self, x, y, color):
+        """Procedurally draws a graphical 4-pointed sparkle-star asset."""
+        points = [
+            x, y,          # Top point
+            x + 10, y + 25, # Inner top-right
+            x + 35, y + 35, # Right point
+            x + 10, y + 45, # Inner bottom-right
+            x, y + 70,      # Bottom point
+            x - 10, y + 45, # Inner bottom-left
+            x - 35, y + 35, # Left point
+            x - 10, y + 25  # Inner top-left
+        ]
+        self.canvas.create_polygon(points, fill=color, outline="")
+
+    def launch_compiled_window(self):
+        """Pops open the completely separate native OS execution frame."""
+        compiled_win = tk.Toplevel(self.root)
+        compiled_win.title(f"Runtime: {self.os_title.get()}")
+        compiled_win.geometry("700(450")
+        compiled_win.configure(bg=self.theme_color)
+        
+        # Build out application engine windows
+        msg = f"Successfully booted custom OS partition configuration!\n\nTheme Palette: {self.theme_color}\nStar Vectors Injected: {self.has_star_asset.get()}"
+        messagebox.showinfo("Kernel Boot Success", msg, parent=compiled_win)
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    
+    # Simple workaround fix for window resizing refreshes
+    app = NextGenOSBuilder(root)
+    root.update()
+    app.update_live_preview()
+    
+    root.mainloop()
